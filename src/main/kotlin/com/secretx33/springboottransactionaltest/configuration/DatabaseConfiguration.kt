@@ -28,20 +28,19 @@ import javax.sql.DataSource
 class TransactionalTestDatabaseConfig {
 
     @Bean
-    @ConfigurationProperties("spring.transactional-test-datasource")
+    @ConfigurationProperties("app.transactional-test-datasource")
     fun transactionalTestDataSourceProperties(): DataSourceProperties = DataSourceProperties()
 
-    @ConfigurationProperties("spring.transactional-test-datasource.hikari")
+    @Bean
     fun transactionalTestDataSource(): DataSource = transactionalTestDataSourceProperties()
         .initializeDataSourceBuilder()
         .type(HikariDataSource::class.java)
         .build()
 
     @Bean
-    @ConfigurationProperties("spring.transactional-test-liquibase")
     fun transactionalTestLiquibase(): SpringLiquibase = SpringLiquibase().apply {
         dataSource = transactionalTestDataSource()
-        changeLog = "classpath:transactional-test-db/changelog/changelog-master.yaml"
+        changeLog = "classpath:db/changelog/changelog-master.yaml"
         databaseChangeLogTable = "transactional_test_databasechangelog"
         databaseChangeLogLockTable = "transactional_test_databasechangeloglock"
         contexts = "transactional-test"
