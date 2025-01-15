@@ -1,0 +1,30 @@
+databaseChangeLog:
+  # Specify that this changelog targets the transactional-test database
+  - property:
+      name: transactional-test-database
+      value: "true"
+      dbms: postgresql
+      
+  # Configure database-specific settings
+  - property:
+      name: database-name
+      value: transactional_test_db
+      dbms: postgresql
+
+  # Explicitly set context and labels for all changes
+  - property:
+      name: context
+      value: transactional-test
+      global: true
+      
+  - property:
+      name: labels
+      value: transactional-test
+      global: true
+
+  # Include remaining migrations with explicit context and labels
+  - includeAll:
+      path: migrations
+      relativeToChangelogFile: true
+      context: transactional-test
+      labels: transactional-test
