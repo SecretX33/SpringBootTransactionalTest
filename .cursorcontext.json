@@ -6,7 +6,7 @@
     "build_system": "Gradle with Kotlin DSL",
     "primary_language": "Kotlin",
     "framework": "Spring Boot 3.4+",
-    "description": "An application created to test spring boot transactional annotation in the various different scenarios",
+    "description": "An application created to test spring boot @Transactional annotation in the various different scenarios, especially in async/launch/mono/suspend contexts, and their interaction, compatilibity, and interoperability between themselves",
     "team_context": {
       "size": "1 backend engineer",
       "priorities": [
