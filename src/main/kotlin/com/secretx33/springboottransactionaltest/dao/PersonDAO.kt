@@ -17,7 +17,7 @@ import java.util.UUID
 class PersonDAO(
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    val id: UUID,
+    val id: UUID = UUID.randomUUID(),
 
     @Column(nullable = false)
     var name: String,

@@ -60,7 +60,7 @@ class TransactionalTestDatabaseConfig {
         .build()
 
     @Bean
-    fun transactionalTestTransactionManager(
-        @Qualifier("transactionalTestEntityManagerFactory") transactionalTestEntityManagerFactory: LocalContainerEntityManagerFactoryBean,
-    ): PlatformTransactionManager = JpaTransactionManager(transactionalTestEntityManagerFactory.`object`!!)
+    fun transactionalTestTransactionManager(@Qualifier("transactionalTestEntityManagerFactory") transactionalTestEntityManagerFactory: LocalContainerEntityManagerFactoryBean): JpaTransactionManager {
+        return JpaTransactionManager(transactionalTestEntityManagerFactory.`object`!!)
+    }
 }

@@ -17,7 +17,7 @@ import java.util.UUID
 class CarDAO(
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    val id: UUID,
+    val id: UUID = UUID.randomUUID(),
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
