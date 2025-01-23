@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/persons")
-class Controller(
+class PersonController(
     private val personService: PersonService,
 ) {
     @PostMapping("/1")
