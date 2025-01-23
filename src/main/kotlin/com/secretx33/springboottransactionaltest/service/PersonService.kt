@@ -3,6 +3,8 @@ package com.secretx33.springboottransactionaltest.service
 import com.secretx33.springboottransactionaltest.dao.CarDAO
 import com.secretx33.springboottransactionaltest.dao.PersonDAO
 import com.secretx33.springboottransactionaltest.dao.RealEstateDAO
+import com.secretx33.springboottransactionaltest.model.Person
+import com.secretx33.springboottransactionaltest.model.toDto
 import com.secretx33.springboottransactionaltest.repository.CarRepository
 import com.secretx33.springboottransactionaltest.repository.PersonRepository
 import com.secretx33.springboottransactionaltest.repository.RealEstateRepository
@@ -17,7 +19,7 @@ class PersonService(
 ) {
 
     @Transactional
-    fun simpleSyncCreateAndUpdatePerson(): PersonDAO {
+    fun simpleSyncCreateAndUpdatePerson(): Person {
         // Create a person with a car and real estate
         val person = personRepository.save(
             PersonDAO(
@@ -62,7 +64,6 @@ class PersonService(
             constructionYear = 2021
         }
 
-        // Save all updates
-        return personRepository.saveAndFlush(person)
+        return personRepository.saveAndFlush(person).toDto()
     }
 } 
