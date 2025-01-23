@@ -41,4 +41,7 @@ class PersonController(
 
     @PostMapping("/10")
     fun monoFromSuspendWithNestedSyncCreateAndUpdatePerson(): Mono<Person> = personService.monoFromSuspendWithNestedSyncCreateAndUpdatePerson()
+
+    @PostMapping("/11")
+    suspend fun suspendWithAsyncCallsCreateAndUpdatePerson(): Person = personService.suspendWithAsyncCallsCreateAndUpdatePerson()
 }

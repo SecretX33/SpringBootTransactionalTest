@@ -14,6 +14,8 @@ import com.secretx33.springboottransactionaltest.repository.RealEstateRepository
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactor.mono
@@ -22,6 +24,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import reactor.core.publisher.Mono
+import java.util.concurrent.ThreadLocalRandom
 
 @Service
 class PersonService(
@@ -338,6 +341,76 @@ class PersonService(
     @Transactional
     fun monoFromSuspendWithNestedSyncCreateAndUpdatePerson(): Mono<Person> = mono(Dispatchers.IO) {
         suspendWithNestedSyncTransactionalMethodsCreateAndUpdatePerson()
+    }
+
+    @Transactional
+    suspend fun suspendWithAsyncCallsCreateAndUpdatePerson(): Person = withContext(Dispatchers.IO) {
+        // Create a person with a car and real estate
+        val person = PersonDAO(
+            name = "John Doe",
+            age = 30,
+            hobby = "Reading",
+        )
+        forceThreadSwitch()
+
+        // Create and associate a car with the person
+        val car = CarDAO(
+            owner = person,
+            model = "Tesla Model 3",
+            releaseYear = 2024,
+        )
+        forceThreadSwitch()
+
+        // Create and associate a real estate with the person
+        val realEstate = RealEstateDAO(
+            owner = person,
+            address = "123 Main St",
+            constructionYear = 2020,
+        )
+        forceThreadSwitch()
+
+        savePersonSync(person)
+
+        forceThreadSwitch()
+        awaitAll(
+            async {
+                delay(ThreadLocalRandom.current().nextInt(1, 10).toLong())
+                forceThreadSwitch()
+                saveCarSync(car)
+            },
+            async {
+                delay(ThreadLocalRandom.current().nextInt(1, 10).toLong())
+                forceThreadSwitch()
+                saveRealEstateSync(realEstate)
+            },
+        )
+
+        person.realEstateDAO = realEstate
+        person.carDAO = car
+
+        forceThreadSwitch()
+
+        // Update all entities
+        person.apply {
+            name = "John Smith"
+            age = 31
+            hobby = "Writing"
+        }
+        forceThreadSwitch()
+
+        car.apply {
+            model = "Tesla Model Y"
+            releaseYear = 2025
+        }
+        forceThreadSwitch()
+
+        realEstate.apply {
+            address = "456 Oak Ave"
+            constructionYear = 2021
+        }
+        forceThreadSwitch()
+
+        personRepository.saveAndFlush(person).toDto()
     }
 
     @Transactional
