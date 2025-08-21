@@ -1,11 +1,11 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-	kotlin("jvm") version "2.0.0"
-	kotlin("plugin.spring") version "2.0.0"
-	id("org.springframework.boot") version "3.4.1"
-	id("io.spring.dependency-management") version "1.1.7"
-	kotlin("plugin.jpa") version "2.0.0"
+	kotlin("jvm") version "2.2.10"
+	kotlin("plugin.spring") version "2.2.10"
+    id("org.springframework.boot") version "3.5.4"
+    id("io.spring.dependency-management") version "1.1.7"
+	kotlin("plugin.jpa") version "2.2.10"
 }
 
 group = "com.secretx33"
@@ -19,7 +19,9 @@ repositories {
 
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-	implementation("org.springframework.boot:spring-boot-starter-web")
+	implementation("org.springframework.boot:spring-boot-starter-web") /*{
+        exclude(group = "org.springframework.boot", module = "spring-boot-starter-tomcat")
+    }*/
 	implementation("org.springframework.boot:spring-boot-starter-webflux")
 
 	implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8")

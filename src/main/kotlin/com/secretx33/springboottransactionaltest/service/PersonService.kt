@@ -11,19 +11,26 @@ import com.secretx33.springboottransactionaltest.model.toDto
 import com.secretx33.springboottransactionaltest.repository.CarRepository
 import com.secretx33.springboottransactionaltest.repository.PersonRepository
 import com.secretx33.springboottransactionaltest.repository.RealEstateRepository
+import jakarta.persistence.EntityManager
+import jakarta.persistence.PersistenceContext
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactor.mono
 import kotlinx.coroutines.withContext
+import org.hibernate.SessionFactory
+import org.hibernate.engine.spi.SessionImplementor
 import org.slf4j.LoggerFactory
+import org.springframework.orm.jpa.EntityManagerHolder
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Isolation
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.transaction.support.TransactionSynchronizationManager
 import reactor.core.publisher.Mono
+import java.lang.ref.WeakReference
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ThreadLocalRandom
 
 @Service
@@ -31,8 +38,21 @@ class PersonService(
     private val personRepository: PersonRepository,
     private val carRepository: CarRepository,
     private val realEstateRepository: RealEstateRepository,
+    private val personService2: PersonService2,
+    private val sessionFactory: SessionFactory,
+    @PersistenceContext private val entityManager: EntityManager,
 ) {
     private val log = LoggerFactory.getLogger(this::class.java)
+    private val sessions = ConcurrentHashMap.newKeySet<WeakReference<Any>>()
+
+    init {
+//        GlobalScope.launch {
+//            while (isActive) {
+//                delay(5000)
+//                log.info("Sessions:\n${sessions.joinToString("\n") { " - ${it.get()}" }}")
+//            }
+//        }
+    }
 
     @Transactional
     fun simpleSyncCreateAndUpdatePerson(): Person {
@@ -414,6 +434,158 @@ class PersonService(
     }
 
     @Transactional
+    fun simpleSyncCreateAndUpdatePersonLoggingHibernateContext(): Person {
+        // Create a person with a car and real estate
+        val person = personRepository.save(
+            PersonDAO(
+                name = "John Doe",
+                age = 30,
+                hobby = "Reading",
+            )
+        )
+
+        // Create and associate a car with the person
+        val car = carRepository.save(
+            CarDAO(
+                owner = person,
+                model = "Tesla Model 3",
+                releaseYear = 2024,
+            )
+        )
+        person.carDAO = car
+
+        saveSession(getSession())
+
+        return innerSimpleSyncCreateAndUpdatePersonLoggingHibernateContext(person, car)
+    }
+
+    @Transactional
+    fun innerSimpleSyncCreateAndUpdatePersonLoggingHibernateContext(
+        person: PersonDAO,
+        car: CarDAO,
+    ): Person {
+        // Create and associate a real estate with the person
+        val realEstate = realEstateRepository.save(
+            RealEstateDAO(
+                owner = person,
+                address = "123 Main St",
+                constructionYear = 2020,
+            )
+        )
+        person.realEstateDAO = realEstate
+
+        // Update all entities
+        person.apply {
+            name = "John Smith"
+            age = 31
+            hobby = "Writing"
+        }
+        car.apply {
+            model = "Tesla Model Y"
+            releaseYear = 2025
+        }
+        realEstate.apply {
+            address = "456 Oak Ave"
+            constructionYear = 2021
+        }
+        saveSession(getSession())
+
+        return personRepository.saveAndFlush(person).toDto().also {
+            saveSession(getSession())
+            val session = (TransactionSynchronizationManager.getResource(sessionFactory)!! as EntityManagerHolder).entityManager
+            sessions.add(WeakReference(session))
+        }
+    }
+
+    @Transactional
+    suspend fun suspendCreateAndUpdatePersonWithThreadSwitchingLoggingHibernateContext(): Person {
+        saveSession(getSession())
+
+        // Create a person with a car and real estate
+        val person = personRepository.save(
+            PersonDAO(
+                name = "John Doe",
+                age = 30,
+                hobby = "Reading",
+            )
+        )
+        forceThreadSwitch()
+
+        // Create and associate a car with the person
+        val car = carRepository.save(
+            CarDAO(
+                owner = person,
+                model = "Tesla Model 3",
+                releaseYear = 2024,
+            )
+        )
+        person.carDAO = car
+
+        saveSession(getSession())
+        forceThreadSwitch()
+
+        // Create and associate a real estate with the person
+        val realEstate = realEstateRepository.save(
+            RealEstateDAO(
+                owner = person,
+                address = "123 Main St",
+                constructionYear = 2020,
+            )
+        )
+        person.realEstateDAO = realEstate
+
+        saveSession(getSession())
+        forceThreadSwitch()
+
+        // Update all entities
+        person.apply {
+            name = "John Smith"
+            age = 31
+            hobby = "Writing"
+        }
+        car.apply {
+            model = "Tesla Model Y"
+            releaseYear = 2025
+        }
+        realEstate.apply {
+            address = "456 Oak Ave"
+            constructionYear = 2021
+        }
+
+        saveSession(getSession())
+        forceThreadSwitch()
+
+        return personRepository.saveAndFlush(person).toDto()
+    }
+
+    @Transactional(isolation = Isolation.SERIALIZABLE)
+    suspend fun suspendCreateAndUpdatePersonWithThreadSwitchingAndInnerMethodLoggingHibernateContext(): Person {
+        // Create a person with a car and real estate
+        val person = personRepository.save(
+            PersonDAO(
+                name = "John Doe",
+                age = 30,
+                hobby = "Reading",
+            )
+        )
+
+        // Create and associate a car with the person
+        val car = carRepository.save(
+            CarDAO(
+                owner = person,
+                model = "Tesla Model 3",
+                releaseYear = 2024,
+            )
+        )
+        person.carDAO = car
+
+        saveSession(getSession())
+        forceThreadSwitch()
+
+        return personService2.innerSuspendCreateAndUpdatePersonWithThreadSwitchingAndInnerMethodLoggingHibernateContext(person, car)
+    }
+
+    @Transactional
     fun saveAllEntitiesSync(
         person: PersonDAO,
         car: CarDAO,
@@ -434,22 +606,23 @@ class PersonService(
     @Transactional
     fun saveRealEstateSync(realEstate: RealEstateDAO): RealEstateDAO = realEstateRepository.saveAndFlush(realEstate)
 
-    private suspend fun forceThreadSwitch() {
-        val currentThread = Thread.currentThread()
-        repeat(10) {
-            delay(1)
-            if (Thread.currentThread() != currentThread) return
-        }
+    private fun getSession(): SessionImplementor = entityManager.unwrap(SessionImplementor::class.java)
 
-        while (Thread.currentThread() == currentThread) {
-            log.debug("Thread is still the same, launching an async task to attempt to prevent this")
-            GlobalScope.launch(Dispatchers.IO) {
-                Thread.sleep(1000)
-            }
-            delay(10)
-        }
+    private fun saveSession(session: Any) = sessions.add(WeakReference(session))
 
-        val newThread = Thread.currentThread()
-        log.info("Thread switch: ${currentThread.name} -> ${newThread.name}")
+//    private suspend fun forceThreadSwitch() {
+//        val coroutineContext = coroutineContext
+//        val thread = Thread.currentThread()
+//        suspendCoroutine { cont ->
+//            GlobalScope.launch(coroutineContext + Dispatchers.IO) {
+//                if (Thread.currentThread() == thread) {
+//                    throw IllegalStateException("Thread is still the same")
+//                }
+//                cont.resume(Unit)
+//            }
+//        }
+//    }
+
+    private suspend fun forceThreadSwitch() = withContext(Dispatchers.IO) {
     }
 } 

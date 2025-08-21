@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController
 import reactor.core.publisher.Mono
 
 @RestController
-@RequestMapping("/persons")
+@RequestMapping("/person")
 class PersonController(
     private val personService: PersonService,
 ) {
@@ -19,29 +19,49 @@ class PersonController(
     suspend fun simpleSuspendCreateAndUpdatePerson(): Person = personService.simpleSuspendCreateAndUpdatePerson()
 
     @PostMapping("/3")
-    suspend fun suspendWithThreadSwitchCreateAndUpdatePerson(): Person = personService.suspendWithThreadSwitchCreateAndUpdatePerson()
+    suspend fun suspendWithThreadSwitchCreateAndUpdatePerson(): Person =
+        personService.suspendWithThreadSwitchCreateAndUpdatePerson()
 
     @PostMapping("/4")
-    suspend fun suspendWithThreadSwitchAndFlushCreateAndUpdatePerson(): Person = personService.suspendWithThreadSwitchAndFlushCreateAndUpdatePerson()
+    suspend fun suspendWithThreadSwitchAndFlushCreateAndUpdatePerson(): Person =
+        personService.suspendWithThreadSwitchAndFlushCreateAndUpdatePerson()
 
     @PostMapping("/5")
-    suspend fun suspendWithNestedSyncTransactionalMethodsCreateAndUpdatePerson(): Person = personService.suspendWithNestedSyncTransactionalMethodsCreateAndUpdatePerson()
+    suspend fun suspendWithNestedSyncTransactionalMethodsCreateAndUpdatePerson(): Person =
+        personService.suspendWithNestedSyncTransactionalMethodsCreateAndUpdatePerson()
 
     @PostMapping("/6")
     fun monoFromSyncCreateAndUpdatePerson(): Mono<Person> = personService.monoFromSyncCreateAndUpdatePerson()
 
     @PostMapping("/7")
-    fun monoFromSimpleSuspendCreateAndUpdatePerson(): Mono<Person> = personService.monoFromSimpleSuspendCreateAndUpdatePerson()
+    fun monoFromSimpleSuspendCreateAndUpdatePerson(): Mono<Person> =
+        personService.monoFromSimpleSuspendCreateAndUpdatePerson()
 
     @PostMapping("/8")
-    fun monoFromSuspendWithThreadSwitchCreateAndUpdatePerson(): Mono<Person> = personService.monoFromSuspendWithThreadSwitchCreateAndUpdatePerson()
+    fun monoFromSuspendWithThreadSwitchCreateAndUpdatePerson(): Mono<Person> =
+        personService.monoFromSuspendWithThreadSwitchCreateAndUpdatePerson()
 
     @PostMapping("/9")
-    fun monoFromSuspendWithThreadSwitchAndFlushCreateAndUpdatePerson(): Mono<Person> = personService.monoFromSuspendWithThreadSwitchAndFlushCreateAndUpdatePerson()
+    fun monoFromSuspendWithThreadSwitchAndFlushCreateAndUpdatePerson(): Mono<Person> =
+        personService.monoFromSuspendWithThreadSwitchAndFlushCreateAndUpdatePerson()
 
     @PostMapping("/10")
-    fun monoFromSuspendWithNestedSyncCreateAndUpdatePerson(): Mono<Person> = personService.monoFromSuspendWithNestedSyncCreateAndUpdatePerson()
+    fun monoFromSuspendWithNestedSyncCreateAndUpdatePerson(): Mono<Person> =
+        personService.monoFromSuspendWithNestedSyncCreateAndUpdatePerson()
 
     @PostMapping("/11")
-    suspend fun suspendWithAsyncCallsCreateAndUpdatePerson(): Person = personService.suspendWithAsyncCallsCreateAndUpdatePerson()
+    suspend fun suspendWithAsyncCallsCreateAndUpdatePerson(): Person =
+        personService.suspendWithAsyncCallsCreateAndUpdatePerson()
+
+    @PostMapping("/12")
+    fun simpleSyncCreateAndUpdatePersonLoggingHibernateContext(): Person =
+        personService.simpleSyncCreateAndUpdatePersonLoggingHibernateContext()
+
+    @PostMapping("/13")
+    suspend fun suspendCreateAndUpdatePersonWithThreadSwitchingLoggingHibernateContext(): Person =
+        personService.suspendCreateAndUpdatePersonWithThreadSwitchingLoggingHibernateContext()
+
+    @PostMapping("/14")
+    suspend fun suspendCreateAndUpdatePersonWithThreadSwitchingAndInnerMethodLoggingHibernateContext(): Person =
+        personService.suspendCreateAndUpdatePersonWithThreadSwitchingAndInnerMethodLoggingHibernateContext()
 }
